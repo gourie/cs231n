@@ -94,7 +94,7 @@ class KNearestNeighbor(object):
       # Compute the l2 distance between the ith test point and all training #
       # points, and store the result in dists[i, :].                        #
       #######################################################################
-      dists[i, :] = np.sqrt(np.sum(np.square(self.X_train - X[i,:]), axis = 0))
+      dists[i, :] = np.sqrt(np.sum(np.square(self.X_train - X[i,:]), axis = 1))
       #######################################################################
       #                         END OF YOUR CODE                            #
       #######################################################################
@@ -109,6 +109,13 @@ class KNearestNeighbor(object):
     """
     num_test = X.shape[0]
     num_train = self.X_train.shape[0]
+
+    # input test: verify that train and test have same 2nd dimension (# features), else matrix multiplication will not work
+    if self.X_train.shape[1] == X.shape[1]:
+      pass
+    else:
+      raise ValueError('Invalid value %d for test features, should be %d' % X.shape[1], self.X_train.shape[1])
+
     dists = np.zeros((num_test, num_train)) 
     #########################################################################
     # TODO:                                                                 #
@@ -122,7 +129,7 @@ class KNearestNeighbor(object):
     # HINT: Try to formulate the l2 distance using matrix multiplication    #
     #       and two broadcast sums.                                         #
     #########################################################################
-    pass
+    dists = np.sqrt(np.sum(X*X, axis=1).reshape((num_test,1)).dot(np.ones((1,num_train))) + np.ones((num_test, 1)).dot(np.transpose(np.sum(self.X_train*self.X_train, axis=1).reshape((num_train,1)))) - 2*X.dot(np.transpose(self.X_train)))
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
