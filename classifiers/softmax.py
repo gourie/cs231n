@@ -22,6 +22,9 @@ def softmax_loss_naive(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
+  num_samples = X.shape[0]
+  num_dim = W.shape[0]
+  num_classes = W.shape[1]
 
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using explicit loops.     #
@@ -29,7 +32,26 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  
+  # forward pass
+  f = np.zeros((num_samples, num_classes))	#init activation function
+
+  for i in xrange(num_samples):	
+    f = X[i].dot(W)
+    # numerical stability trick: see http://cs231n.github.io/linear-classify/#softmax
+    f -= np.max(f)
+    breuk = np.exp(f[y[i]]) / np.sum(np.exp(f))
+    loss += -np.log(breuk)
+
+	# gradient calc
+	# for j in xrange(num_classes):
+
+  loss /= num_samples	#mean across all samples
+  loss += 0.5 * reg * np.sum(W * W)	#add regularization term
+
+  dW /= num_samples		#mean across all samples
+  dW += reg * W 		#add regularization term
+
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
