@@ -12,7 +12,7 @@ def softmax_loss_naive(W, X, y, reg):
   - W: A numpy array of shape (D, C) containing weights.
   - X: A numpy array of shape (N, D) containing a minibatch of data.
   - y: A numpy array of shape (N,) containing training labels; y[i] = c means
-    that X[i] has label c, where 0 <= c < C.
+	that X[i] has label c, where 0 <= c < C.
   - reg: (float) regularization strength
 
   Returns a tuple of:
@@ -34,17 +34,25 @@ def softmax_loss_naive(W, X, y, reg):
   #############################################################################
   
   # forward pass
-  f = np.zeros((num_samples, num_classes))	#init activation function
+  # f = np.zeros((num_samples, num_classes))	#init activation function
 
   for i in xrange(num_samples):	
-    f = X[i].dot(W)
-    # numerical stability trick: see http://cs231n.github.io/linear-classify/#softmax
-    f -= np.max(f)
-    breuk = np.exp(f[y[i]]) / np.sum(np.exp(f))
-    loss += -np.log(breuk)
+	f = X[i].dot(W)
+	# numerical stability trick: see http://cs231n.github.io/linear-classify/#softmax
+	f -= np.max(f)
+	fyi_exp = np.exp(f[y[i]])
+	f_exp = np.exp(f)
+	breuk =  fyi_exp / np.sum(f_exp)
+	loss += -np.log(breuk)
 
 	# gradient calc
-	# for j in xrange(num_classes):
+	for j in xrange(num_classes):
+		# a = exp(fyi), b= sum(exp(fj))
+		da = fyi_exp * X[i]
+		# db = num_classes * np.reshape(X[i],(num_dim, 1)).dot(np.reshape(f_exp, (1, num_classes)))
+		db = X[i] * np.sum(f_exp)
+		# print da.shape, db.shape
+		dW[:,j] += (breuk * db - da)* 1/fyi_exp
 
   loss /= num_samples	#mean across all samples
   loss += 0.5 * reg * np.sum(W * W)	#add regularization term
