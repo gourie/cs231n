@@ -37,22 +37,22 @@ def softmax_loss_naive(W, X, y, reg):
   # f = np.zeros((num_samples, num_classes))	#init activation function
 
   for i in xrange(num_samples):	
-	f = X[i].dot(W)
+	f = X[i].dot(W)		# 1xC matrix
 	# numerical stability trick: see http://cs231n.github.io/linear-classify/#softmax
 	f -= np.max(f)
 	fyi_exp = np.exp(f[y[i]])
 	f_exp = np.exp(f)
+	p = lambda j: np.exp(f[j])/np.sum(np.exp(f))
 	breuk =  fyi_exp / np.sum(f_exp)
+	breuk2 = p(y[i])
+	if breuk != breuk2:
+		print 'p not correct'
 	loss += -np.log(breuk)
 
 	# gradient calc
 	for j in xrange(num_classes):
-		# a = exp(fyi), b= sum(exp(fj))
-		da = fyi_exp * X[i]
-		# db = num_classes * np.reshape(X[i],(num_dim, 1)).dot(np.reshape(f_exp, (1, num_classes)))
-		db = X[i] * np.sum(f_exp)
-		# print da.shape, db.shape
-		dW[:,j] += (breuk * db - da)* 1/fyi_exp
+		# dW derived from Li = -fyi + log (sum(efj))
+		dW[:,j] += X[i] * (p(j) - (j == y[i]))
 
   loss /= num_samples	#mean across all samples
   loss += 0.5 * reg * np.sum(W * W)	#add regularization term
@@ -76,6 +76,8 @@ def softmax_loss_vectorized(W, X, y, reg):
   # Initialize the loss and gradient to zero.
   loss = 0.0
   dW = np.zeros_like(W)
+  num_samples = X.shape[0]
+  num_classes = W.shape[1]
 
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
@@ -83,7 +85,33 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  # loss L = 1/N * Li
+  # Li = (-fyi + log (sum(efj)))
+  f = X.dot(W)			# NxC matrix
+  # normalization trick for numerical stability
+  f -= np.max(f)
+  loss = np.sum( -f[np.arange(num_samples), y] + np.log( np.sum(np.exp(f),axis=1) ), axis=0 )
+
+  loss /= num_samples	#mean across all samples
+  loss += 0.5 * reg * np.sum(W * W)	#add regularization term
+
+  # print np.exp(f).shape, np.sum(np.exp(f), axis=1).shape
+  p = np.exp(f)/np.sum(np.exp(f), axis=1).reshape(num_samples,1)		# NxC matrix
+  # print p.shape
+  dW = X.T.dot(p)
+  # for j==y[i]: the gradient must be corrected with -X[i]
+  # matrix multiplication trick to select and sum the right sample values for each class label C
+  A = np.zeros_like(p.T)	# CxN matrix that 
+  # print A.shape
+  for j in xrange(num_classes):
+  	A[j,y==j] = 1
+  Xmask = A.dot(X)  	# CxD matrix summing D for all samples for each label C
+  # print Xmask.T.shape
+  dW += -Xmask.T 	
+
+  dW /= num_samples		#mean across all samples
+  dW += reg * W 		#add regularization term  
+
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
