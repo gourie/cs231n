@@ -101,13 +101,23 @@ def softmax_loss_vectorized(W, X, y, reg):
   dW = X.T.dot(p)
   # for j==y[i]: the gradient must be corrected with -X[i]
   # matrix multiplication trick to select and sum the right sample values for each class label C
-  A = np.zeros_like(p.T)	# CxN matrix that 
+  A = np.zeros_like(p.T)	# CxN matrix 
   # print A.shape
   for j in xrange(num_classes):
   	A[j,y==j] = 1
   Xmask = A.dot(X)  	# CxD matrix summing D for all samples for each label C
   # print Xmask.T.shape
   dW += -Xmask.T 	
+
+  # alternative found online (https://github.com/MyHumbleSelf/cs231n/blob/master/assignment1/cs231n/classifiers/softmax.py) that is slightly (0.005s) faster
+  # this one uses the indicator function (different dimensions for inputs so code slightly adapted here!!!)
+  # Gradient: dw_j = 1/num_train * \sum_i[x_i * (p(y_i = j)-Ind{y_i = j} )]
+  # p = np.exp(f)/np.sum(np.exp(f), axis=1).reshape(num_samples,1)
+  # ind = np.zeros(p.T.shape)
+  # # print y.shape, ind.shape
+  # ind[y, range(num_samples)] = 1
+  # dW = np.dot(X.T, (p-ind.T))
+  # dW /= num_train  
 
   dW /= num_samples		#mean across all samples
   dW += reg * W 		#add regularization term  
